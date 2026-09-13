@@ -84,6 +84,16 @@ with no Privy credentials it still runs the first three stages on live data and 
 last two were skipped. A captured run is in
 [`docs/demo-transcript.txt`](docs/demo-transcript.txt). The signing-gate proof at its core:
 
+For a stage — a human in the loop, in real time — use the interactive variant.
+An agent keeps trying to pay a flagged vendor (real `eth_signTypedData_v4` calls,
+no funds needed); you press **[a]** to approve the block and the agent's very next
+attempt flips to refused, live; **[r]** lifts it again:
+
+```bash
+node --env-file=.env scripts/live-demo.mjs
+```
+
+
 ```
 [before] agent-01 signing to <vendor>           -> SIGNED
          appended to 12 policies, no rule lost
