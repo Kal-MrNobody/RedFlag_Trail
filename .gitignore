@@ -17,3 +17,16 @@ __pycache__/
 .DS_Store
 *.log
 .tmp/
+
+# rust / substreams build artifacts
+papertrail/target/
+papertrail/src/pb/
+vendor/
+
+# fleet (wallet ids)
+fleet.json
+planted-vendor.json
+g2-payments.json
+node_modules/
+quorum-keys.json
+quorum.json

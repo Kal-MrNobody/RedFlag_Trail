@@ -1,0 +1,81 @@
+specVersion: v0.1.0
+package:
+  name: papertrail
+  version: v0.1.0
+  url: https://github.com/Kal-MrNobody/RedFlag_Trail
+  description: |
+    Payer-attributed x402 spend ledger for AI agent fleets.
+
+    Composes Pinax's x402 and erc20-tokens modules and adds what neither
+    provides: a computed facilitator allowlist (x402 explicitly applies none),
+    token decimals sourced by eth_call, decimal/USD normalisation that refuses
+    to call a non-stablecoin amount "USD", and a vendor first-seen store.
+
+imports:
+  database_changes: ../vendor/substreams-database-change-v2.0.0.spkg
+  x402: ../vendor/x402-v0.1.0.spkg
+  erc20_tokens: ../vendor/erc20-tokens-v0.4.0.spkg
+
+protobuf:
+  files:
+    - papertrail.proto
+  importPaths:
+    - ./proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/papertrail.wasm
+
+modules:
+  # Normalise x402 events into a payer-attributed ledger.
+  # params carries the RPC chunk size for the decimals batch.
+  - name: map_payments
+    kind: map
+    # x402 settlement does not exist for most of Base's history. Stores are
+    # backfilled from their initialBlock, so leaving this at 0 makes any sink
+    # run rescan ~51M mostly-empty blocks before it can flush a single row.
+    # Lower this toward x402 genesis on Base for a complete ledger; kept recent
+    # so the G1 verify reproduces in minutes rather than hours.
+    initialBlock: 51230000
+    inputs:
+      - params: string
+      - source: sf.substreams.v1.Clock
+      - map: x402:map_events
+    output:
+      type: proto:redflag.papertrail.v1.Payments
+
+  # Vendor first-seen. Set-if-not-exists so the earliest sighting wins.
+  # Enables R2 (fresh vendor where we are >50% of lifetime receipts).
+  - name: store_vendor_first_seen
+    kind: store
+    initialBlock: 51230000
+    updatePolicy: set_if_not_exists
+    valueType: string
+    inputs:
+      - map: map_payments
+
+  # Facilitator activity, the input to the computed allowlist.
+  - name: store_facilitator_count
+    kind: store
+    initialBlock: 51230000
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_payments
+
+  - name: db_out
+    kind: map
+    initialBlock: 51230000
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - map: map_payments
+      - store: store_vendor_first_seen
+        mode: deltas
+    output:
+      type: proto:sf.substreams.sink.database.v1.DatabaseChanges
+
+network: base-mainnet
+
+params:
+  map_payments: "100"

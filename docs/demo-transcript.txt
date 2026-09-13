@@ -1,0 +1,77 @@
+$ node --env-file=.env scripts/e2e-demo.mjs
+# Captured 2026-09-13T12:49Z against live Base data + live Privy. All addresses/hashes are real.
+
+
+RedFlag_Trail — end-to-end, on live data
+================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE 1 — RECONSTRUCT live x402 spend, attributed to the real payer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  indexed        11173 payments over blocks 51234998–51244759
+  value (priced) $121,846.14   (null amounts are UNPRICED, not zero)
+  distinct       1450 payers · 862 vendors · 292 facilitators
+────────────────────────────────────────────────────────────────
+  payer ≠ tx.from on 11129/11173 = 99.6% of payments.
+  The agent SIGNS the EIP-3009 authorization; a facilitator BROADCASTS it,
+  so tx.from is one of 292 facilitators. Attributing by tx.from would
+  credit almost every payment to the wrong party. We attribute by payer.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE 2 — FLAG a risky vendor, with the exact policy rule it proposes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  vendor    0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88
+  finding   R1:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88  [R1 · high]
+  why       Not present in the Agent0 / ERC-8004 registry on Base.
+  activity  8 payment(s), $52,673.12, from 1 distinct payer(s)
+  evidence  0x953ff29db233cdd2b51fa0f149b4a6c2d601f2e1ae5010e56bdbd3bfc6b66e06
+────────────────────────────────────────────────────────────────
+  proposed Privy rule (constrains eth_signTypedData_v4 on the message `to`):
+    action=DENY  method=eth_signTypedData_v4
+    to == 0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE 3 — BACKTEST the rule over indexed history before anyone approves it
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  would have blocked   0 fleet payment(s)  $0.00
+  false positives      0 vendor(s) many independent payers also use
+────────────────────────────────────────────────────────────────
+  No false-positive signal: this vendor is not a widely-used service, so a
+  block will not break legitimate traffic. Safe to put to a human quorum.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE 4 — HUMAN QUORUM approval — enforced by Privy, not by our console
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  quorum zg04m49ai3iv7n0z5o6mqpyq  threshold 2/2  gating policy p15k6joevigsy4wop28fx6dc
+  [no signature]   append a rule -> REFUSED (401)
+  [1-of-2 signed]  append a rule -> REFUSED (401)
+  [2-of-2 signed]  append a rule -> ACCEPTED (rule cyiw0dv1pso83zti3d60zk7d)
+────────────────────────────────────────────────────────────────
+  Privy refused every under-quorum change and accepted only the fully-signed one.
+  "A human quorum approves" is a property of the signer, not of our UI.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE 5 — ENFORCE at signing time — the agent is refused BY PRIVY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  agent agent-01  0x3851A559…AeAD01
+  [before] sign a payment to 0xe742f9df…6eea88 -> SIGNED
+  ...quorum-approved rule appended to agent-01's policy
+  [after ] sign the IDENTICAL payment          -> REFUSED (policy_violation)
+  [control] sign to a DIFFERENT vendor         -> SIGNED
+  ...demo rule removed; fleet policy restored to baseline
+────────────────────────────────────────────────────────────────
+  The agent could sign a second ago; the same signature is now refused inside
+  the signer. The block is at SIGNING TIME — the agent never gets a signature to
+  hand a facilitator. A different vendor still signs, so it is scoped, not a halt.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAGE ✓ — SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1 reconstruct                live ledger read ✓
+  2 flag                       real finding + proposed rule ✓
+  3 backtest                   safe to enforce ✓
+  4 human quorum               Privy-gated 2-of-2 ✓
+  5 signing-time block         refused BY PRIVY ✓
+
+  Full loop proven live: on-chain spend → finding → backtest → human quorum →
+  a payment blocked at signing time.

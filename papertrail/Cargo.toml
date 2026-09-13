@@ -1,0 +1,24 @@
+[package]
+name = "papertrail"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Payer-attributed x402 spend ledger"
+
+[lib]
+crate-type = ["cdylib"]
+
+# Versions pinned to Pinax's known-good set (NOTES.md 9.4) rather than "latest",
+# because these are the versions the upstream packages are built against.
+[dependencies]
+substreams = "0.7.0"
+substreams-ethereum = "0.11.1"
+substreams-database-change = "3.0.0"
+substreams-abis = { git = "https://github.com/pinax-network/substreams-abis.git", tag = "v1.5.0" }
+prost = "0.13"
+prost-types = "0.13"
+
+[profile.release]
+lto = true
+opt-level = 's'
+strip = "debuginfo"

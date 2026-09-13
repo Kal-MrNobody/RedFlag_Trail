@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RedFlag_Trail",
+    "version": "0.1.0",
+    "description": "Payer-attributed x402 spend ledger for AI agent fleets. Spend is attributed to the payer decoded from the EIP-3009 authorization, never to tx.from (which is the facilitator that relayed it). Measured on Base, those differ on 99.6% of payments. Every response cites transaction hashes."
+  },
+  "servers": [{ "url": "https://api.redflagtrail.example", "description": "Set to your deployment" }],
+  "paths": {
+    "/v1/spend": {
+      "get": {
+        "operationId": "getSpendSummary",
+        "summary": "Summarise agent x402 spend, attributed to the real payer",
+        "description": "Totals, top vendors and evidence transaction hashes over a time window. Use this to answer 'what did the fleet spend' without misattributing payments to the relaying facilitator.",
+        "parameters": [{
+          "name": "since_days", "in": "query", "required": false,
+          "schema": { "type": "integer", "default": 30 },
+          "description": "Look back this many days."
+        }],
+        "responses": { "200": {
+          "description": "Spend summary",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpendSummary" } } }
+        } }
+      }
+    },
+    "/v1/vendors": {
+      "get": {
+        "operationId": "getVendorRisk",
+        "summary": "Registry status, activity and exposure for one vendor",
+        "description": "Combines the ERC-8004 / Agent0 registry record with observed payment activity. A vendor with no registry row is UNCHECKED, which is not the same as unregistered.",
+        "parameters": [{
+          "name": "address", "in": "query", "required": true,
+          "schema": { "type": "string" },
+          "description": "Vendor (recipient) address."
+        }],
+        "responses": { "200": {
+          "description": "Vendor risk profile",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VendorRisk" } } }
+        } }
+      }
+    },
+    "/v1/findings": {
+      "get": {
+        "operationId": "listFindings",
+        "summary": "Open risk findings, each carrying the policy rule it proposes",
+        "description": "Each finding includes proposed_rule: the exact JSON that would be POSTed to the wallet provider to block the vendor at signing time.",
+        "responses": { "200": {
+          "description": "Findings",
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": { "findings": { "type": "array", "items": { "$ref": "#/components/schemas/Finding" } } }
+          } } }
+        } }
+      }
+    },
+    "/v1/findings/{id}/backtest": {
+      "post": {
+        "operationId": "backtestFinding",
+        "summary": "Replay a proposed rule over indexed history before enforcing it",
+        "description": "Returns what the rule WOULD have blocked and what it would block by mistake. A vendor paid by many independent payers is probably legitimate, so blocking it is probably wrong. Run this before proposing enforcement.",
+        "parameters": [{
+          "name": "id", "in": "path", "required": true,
+          "schema": { "type": "string" }, "description": "Finding id."
+        }],
+        "responses": { "200": {
+          "description": "Backtest result",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Backtest" } } }
+        } }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Liveness and configured fleet size",
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": {
+          "type": "object", "properties": { "ok": { "type": "boolean" }, "fleet_agents": { "type": "integer" } }
+        } } } } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SpendSummary": {
+        "type": "object",
+        "properties": {
+          "payments": { "type": "integer" },
+          "total_usd": { "type": "string", "description": "Sum of amount_usd. NULL amounts (non-stablecoins) are excluded, never counted as zero." },
+          "payers": { "type": "integer" },
+          "vendors": { "type": "integer" },
+          "facilitators": { "type": "integer" },
+          "payer_ne_txfrom": { "type": "integer", "description": "Payments where the real payer differs from tx.from." },
+          "attribution_note": { "type": "string" },
+          "top_vendors": { "type": "array", "items": {
+            "type": "object",
+            "properties": {
+              "recipient": { "type": "string" },
+              "payments": { "type": "integer" },
+              "usd": { "type": "string" },
+              "sample_tx": { "type": "array", "items": { "type": "string" }, "description": "Verifiable transaction hashes." }
+            }
+          } }
+        }
+      },
+      "VendorRisk": {
+        "type": "object",
+        "properties": {
+          "address": { "type": "string" },
+          "registry": { "type": "object", "description": "ERC-8004 record, or {checked:false} when never looked up." },
+          "activity": { "type": "object", "description": "Payment counts, totals and sample transaction hashes." }
+        }
+      },
+      "Finding": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "rule": { "type": "string", "enum": ["R1", "R2", "R4"] },
+          "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+          "subject": { "type": "string" },
+          "summary": { "type": "string" },
+          "evidence_tx": { "type": "array", "items": { "type": "string" } },
+          "exposure_usd": { "type": "string" },
+          "proposed_rule": { "type": "object", "description": "Policy rule JSON, ready to POST. R4 findings are advisory: the facilitator is not part of the signed message, so no signing-time rule can key on it." }
+        }
+      },
+      "Backtest": {
+        "type": "object",
+        "properties": {
+          "supported": { "type": "boolean" },
+          "reason": { "type": "string", "description": "Why the rule could not be replayed, when supported is false." },
+          "would_block": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "integer" },
+              "usd": { "type": "string" },
+              "tx": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "false_positives": {
+            "type": "object",
+            "description": "Targeted vendors that look legitimate, judged by independent payers outside the fleet.",
+            "properties": {
+              "count": { "type": "integer" },
+              "vendors": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

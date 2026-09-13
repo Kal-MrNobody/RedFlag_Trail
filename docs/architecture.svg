@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 640" width="880" height="640" font-family="ui-monospace,Menlo,monospace">
+  <style>
+    .box { fill:#fff; stroke:#111; stroke-width:1.5 }
+    .accent { fill:#fff; stroke:#b00020; stroke-width:2 }
+    .t { font-size:12px; fill:#111 }
+    .s { font-size:10px; fill:#666 }
+    .b { font-size:12px; fill:#111; font-weight:700 }
+    .r { font-size:11px; fill:#b00020; font-weight:700 }
+    .ln { stroke:#111; stroke-width:1.2; fill:none; marker-end:url(#a) }
+    .lr { stroke:#b00020; stroke-width:1.8; fill:none; marker-end:url(#ar) }
+  </style>
+  <defs>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#111"/></marker>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#b00020"/></marker>
+  </defs>
+
+  <text x="16" y="24" class="b">RedFlag_Trail</text>
+  <text x="16" y="40" class="s">x402 spend attributed to the decoded payer, never tx.from — and findings that become signing-time policy</text>
+
+  <rect x="16" y="60" width="180" height="44" class="box"/>
+  <text x="26" y="80" class="t">Base mainnet</text>
+  <text x="26" y="95" class="s">x402 / EIP-3009 settlements</text>
+
+  <path d="M106,104 L106,132" class="ln"/>
+  <text x="114" y="122" class="s">Substreams · The Graph Market</text>
+
+  <rect x="16" y="132" width="420" height="150" class="box"/>
+  <text x="26" y="152" class="b">papertrail — composed Substreams package</text>
+  <rect x="28" y="164" width="130" height="30" class="box"/>
+  <text x="36" y="183" class="t">x402:map_events</text>
+  <rect x="28" y="200" width="130" height="30" class="box"/>
+  <text x="36" y="219" class="t">erc20_tokens</text>
+  <rect x="184" y="180" width="110" height="34" class="box"/>
+  <text x="192" y="201" class="t">map_payments</text>
+  <rect x="300" y="164" width="126" height="30" class="box"/>
+  <text x="307" y="183" class="s">vendor first_seen</text>
+  <rect x="300" y="200" width="126" height="30" class="box"/>
+  <text x="307" y="219" class="s">facilitator count</text>
+  <path d="M158,179 L184,193" class="ln"/>
+  <path d="M158,215 L184,203" class="ln"/>
+  <path d="M294,190 L300,179" class="ln"/>
+  <path d="M294,200 L300,213" class="ln"/>
+  <text x="26" y="256" class="s">eth_call decimals() — batched, memoised</text>
+  <text x="26" y="272" class="s">computed facilitator allowlist (upstream applies none)</text>
+
+  <path d="M226,282 L226,310" class="ln"/>
+  <text x="234" y="300" class="s">substreams-sink-sql</text>
+
+  <rect x="16" y="310" width="420" height="58" class="box"/>
+  <text x="26" y="330" class="b">Postgres</text>
+  <text x="26" y="348" class="s">payments · vendors · vendor_registry · findings · backtests</text>
+  <text x="26" y="362" class="s">payment_id = tx_hash:log_block_index (explorer-verifiable)</text>
+
+  <rect x="470" y="132" width="200" height="52" class="box"/>
+  <text x="480" y="152" class="t">Agent0 / ERC-8004</text>
+  <text x="480" y="168" class="s">subgraph on Base</text>
+  <text x="480" y="180" class="s">registry status, feedback</text>
+  <path d="M470,160 L436,330" class="ln"/>
+
+  <rect x="470" y="304" width="200" height="78" class="box"/>
+  <text x="480" y="324" class="b">MCP server</text>
+  <text x="480" y="346" class="s">spend_summary · vendor_risk</text>
+  <text x="480" y="374" class="s">propose_enforcement</text>
+  <text x="480" y="360" class="s">list_findings · backtest_rule</text>
+  <path d="M436,339 L470,343" class="ln"/>
+
+  <rect x="700" y="310" width="164" height="58" class="box"/>
+  <text x="710" y="330" class="b">review console</text>
+  <text x="710" y="346" class="s">spend · finding · diff</text>
+  <text x="710" y="360" class="s">backtest · approve</text>
+  <path d="M670,339 L700,339" class="ln"/>
+
+  <rect x="470" y="400" width="394" height="54" class="box"/>
+  <text x="480" y="420" class="b">2-of-2 key quorum</text>
+  <text x="480" y="438" class="s">Privy refuses unsigned and 1-of-2 changes — server-side</text>
+  <path d="M782,368 L782,400" class="ln"/>
+
+  <rect x="470" y="472" width="394" height="54" class="box"/>
+  <text x="480" y="492" class="b">POST /v1/policies/{id}/rules</text>
+  <text x="480" y="510" class="s">append-only; verified to add one rule and lose none</text>
+  <path d="M667,454 L667,472" class="ln"/>
+
+  <rect x="470" y="546" width="394" height="66" class="accent"/>
+  <text x="480" y="568" class="r">agent signs the same x402 payment → REFUSED</text>
+  <text x="480" y="586" class="s">400 { "code": "policy_violation" } — by Privy, at signing time</text>
+  <text x="480" y="602" class="s">the agent never obtains a signature to hand to a facilitator</text>
+  <path d="M667,526 L667,546" class="lr"/>
+
+  <rect x="16" y="400" width="420" height="126" class="box"/>
+  <text x="26" y="420" class="b">Risk rules → each carries a Privy rule, ready to POST</text>
+  <text x="26" y="442" class="t">R1  unregistered vendor</text>
+  <text x="26" y="460" class="t">R2  fresh vendor, we are &gt;50% of lifetime receipts</text>
+  <text x="26" y="478" class="t">R4  unknown facilitator  <tspan class="s">(advisory — not in the signed message)</tspan></text>
+  <text x="26" y="502" class="s">backtest replays the rule over history before anyone approves:</text>
+  <text x="26" y="516" class="s">would_block {count, usd, tx[]} · false_positives {count, vendors[]}</text>
+  <path d="M436,430 L470,360" class="ln"/>
+
+  <text x="16" y="580" class="b">99.6%</text>
+  <text x="16" y="598" class="s">of x402 payments on Base have payer ≠ tx.from.</text>
+  <text x="16" y="612" class="s">Attributing by tx.from credits them to the relaying facilitator.</text>
+</svg>

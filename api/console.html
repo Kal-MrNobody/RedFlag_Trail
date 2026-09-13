@@ -1,0 +1,179 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>RedFlag_Trail</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --hi:#f6f6f6;
+          --red:#b00020; --amber:#8a6100; --green:#0a6b3d; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+         color:var(--fg); background:var(--bg); }
+  header { padding:16px; border-bottom:2px solid var(--fg); }
+  h1 { font-size:16px; margin:0 0 4px; letter-spacing:.5px; }
+  .sub { color:var(--muted); font-size:12px; }
+  main { padding:16px; max-width:1100px; }
+  section { margin-bottom:28px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:1px;
+       border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th,td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--line);
+          vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  tr:hover td { background:var(--hi); }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .addr { font-size:11px; }
+  a { color:inherit; }
+  .stats { display:flex; flex-wrap:wrap; gap:20px; margin-bottom:12px; }
+  .stat b { display:block; font-size:20px; font-variant-numeric:tabular-nums; }
+  .stat span { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+  .sev-high { color:var(--red); font-weight:700; }
+  .sev-medium { color:var(--amber); font-weight:700; }
+  button { font:inherit; padding:5px 12px; border:1px solid var(--fg); background:var(--bg);
+           color:var(--fg); cursor:pointer; }
+  button:hover { background:var(--fg); color:var(--bg); }
+  button[disabled] { opacity:.4; cursor:not-allowed; }
+  pre { background:var(--hi); padding:10px; overflow-x:auto; font-size:11px; margin:6px 0;
+        border-left:3px solid var(--line); }
+  .diff-add { color:var(--green); }
+  .diff-ctx { color:var(--muted); }
+  .panel { border:1px solid var(--fg); padding:12px; margin-top:10px; }
+  .note { color:var(--muted); font-size:11px; margin-top:4px; }
+  .warn { border-left:3px solid var(--red); padding-left:8px; color:var(--red); font-size:12px; }
+  .ok { color:var(--green); }
+</style>
+
+<header>
+  <h1>RedFlag_Trail</h1>
+  <div class="sub">x402 spend attributed to the decoded <b>payer</b>, never tx.from &mdash; and findings that become signing-time policy.</div>
+</header>
+
+<main>
+  <section>
+    <h2>Spend</h2>
+    <div class="stats" id="stats"></div>
+    <div class="note" id="attribution"></div>
+    <table id="vendors">
+      <thead><tr><th>Vendor</th><th class="num">Payments</th><th class="num">USD</th><th>Evidence</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Findings</h2>
+    <div id="findings"></div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const short = (a) => a ? a.slice(0,10) + '…' + a.slice(-8) : '';
+const scan = (tx) => `<a href="https://basescan.org/tx/${tx}" target="_blank" rel="noopener">${tx.slice(0,10)}…</a>`;
+const usd = (v) => v == null ? '—' : Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+async function load() {
+  const spend = await (await fetch('/v1/spend?since_days=3650')).json();
+  $('#stats').innerHTML = [
+    ['Payments', spend.payments],
+    ['Total USD', usd(spend.total_usd)],
+    ['Payers', spend.payers],
+    ['Vendors', spend.vendors],
+    ['Facilitators', spend.facilitators],
+  ].map(([k,v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
+
+  // One decimal, and never round UP to 100 - 905/908 is 99.7%, not 100%.
+  // Overstating our own headline number is the fastest way to lose a reviewer.
+  const raw = spend.payments ? 100*spend.payer_ne_txfrom/spend.payments : 0;
+  const pct = (raw === 100 ? '100' : Math.min(raw, 99.9).toFixed(1));
+  $('#attribution').innerHTML =
+    `<b>${spend.payer_ne_txfrom} of ${spend.payments} (${pct}%)</b> payments have payer ≠ tx.from. ` +
+    `Attributing by tx.from would credit them to the relaying facilitator. ` +
+    `Blocks ${spend.from_block}–${spend.to_block}.`;
+
+  $('#vendors tbody').innerHTML = (spend.top_vendors||[]).map(v => `
+    <tr>
+      <td class="addr">${short(v.recipient)}</td>
+      <td class="num">${v.payments}</td>
+      <td class="num">${usd(v.usd)}</td>
+      <td class="addr">${(v.sample_tx||[]).map(scan).join(' ')}</td>
+    </tr>`).join('') || '<tr><td colspan="4">no payments indexed</td></tr>';
+
+  const { findings } = await (await fetch('/v1/findings')).json();
+  $('#findings').innerHTML = findings.length
+    ? findings.map(renderFinding).join('')
+    : '<div class="note">No findings yet. Run scripts/g3-enrich.mjs then scripts/g3-risk.mjs.</div>';
+}
+
+function renderFinding(f) {
+  const rule = f.proposed_rule || {};
+  const advisory = rule._advisory;
+  const bt = f.would_block_count != null;
+  return `
+  <div class="panel">
+    <div>
+      <span class="sev-${f.severity}">${f.rule} ${f.severity.toUpperCase()}</span>
+      &mdash; <span class="addr">${f.subject}</span>
+      <span class="note">(${f.subject_kind})</span>
+    </div>
+    <div style="margin:6px 0">${f.summary}</div>
+    ${f.detail ? `<div class="note">${f.detail}</div>` : ''}
+    <div class="note">Evidence: ${(f.evidence_tx||[]).map(scan).join(' ') || '—'}</div>
+
+    <div style="margin-top:10px"><b>Policy diff</b> — what approving this appends:</div>
+    ${advisory
+      ? `<div class="warn">Advisory only. The facilitator is not a field of the EIP-3009 message,
+           so no signing-time rule can key on it. Enforcing this would require constraining which
+           facilitator the agent submits to, inside the x402 client.</div>`
+      : `<pre><span class="diff-ctx">  policy rules[]</span>
+<span class="diff-ctx">    { name: "Allow EIP-3009 on Base", action: "ALLOW", ... }</span>
+<span class="diff-add">+   ${JSON.stringify(stripPrivate(rule), null, 2).split('\n').join('\n+   ')}</span></pre>
+         <div class="note">DENY beats ALLOW and Privy is default-deny, so this takes effect for every
+           wallet bound to the policy.</div>`}
+
+    <div style="margin-top:10px">
+      <b>Backtest</b>
+      ${bt ? `<div>would block <b>${f.would_block_count}</b> payment(s)
+               ($${usd(f.would_block_usd)}) &nbsp;
+               likely false positives: <b>${f.false_positive_count}</b></div>`
+           : '<div class="note">not run yet</div>'}
+      <div style="margin-top:8px">
+        <button onclick="backtest('${f.id}', this)">Backtest</button>
+        <button onclick="approve('${f.id}', this)" ${advisory ? 'disabled' : ''}>
+          ${f.status === 'approved' ? 'Approved' : 'Approve'}
+        </button>
+        <span class="note" id="msg-${cssId(f.id)}"></span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Strip our annotation keys so the diff shows exactly what gets POSTed.
+function stripPrivate(rule) {
+  const out = {};
+  for (const [k,v] of Object.entries(rule)) if (!k.startsWith('_')) out[k] = v;
+  return out;
+}
+const cssId = (id) => id.replace(/[^a-zA-Z0-9]/g,'_');
+
+async function backtest(id, btn) {
+  btn.disabled = true; btn.textContent = 'Running…';
+  const r = await (await fetch(`/v1/findings/${encodeURIComponent(id)}/backtest`, {method:'POST'})).json();
+  const el = document.getElementById('msg-'+cssId(id));
+  el.textContent = r.supported
+    ? `would block ${r.would_block.count} ($${usd(r.would_block.usd)}), ${r.false_positives.count} likely false positive(s)`
+    : r.reason;
+  btn.disabled = false; btn.textContent = 'Backtest';
+  if (r.supported) load();
+}
+
+async function approve(id, btn) {
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const r = await (await fetch(`/v1/findings/${encodeURIComponent(id)}/approve`, {method:'POST'})).json();
+  const el = document.getElementById('msg-'+cssId(id));
+  el.innerHTML = r.error ? `<span style="color:var(--red)">${r.error}</span>`
+                         : `<span class="ok">${r.message}</span>`;
+  btn.textContent = r.error ? 'Approve' : 'Approved';
+  btn.disabled = !r.error;
+}
+
+load();
+</script>

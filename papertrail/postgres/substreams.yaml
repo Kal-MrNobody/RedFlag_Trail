@@ -1,0 +1,27 @@
+specVersion: v0.1.0
+package:
+  name: papertrail_postgres
+  version: v0.1.0
+  url: https://github.com/Kal-MrNobody/RedFlag_Trail
+  description: papertrail x402 spend ledger (PostgreSQL sink)
+
+imports:
+  db: ../papertrail-v0.1.0.spkg
+  # Provides sf.substreams.sink.sql.v1.Service, which is not in the bundled
+  # descriptors - without it `substreams pack` cannot resolve the sink type.
+  sql: ../../vendor/substreams-sink-sql-protodefs-v1.0.7.spkg
+
+modules:
+  - name: db_out
+    use: db:db_out
+
+sink:
+  module: db_out
+  type: sf.substreams.sink.sql.v1.Service
+  config:
+    schema: "./schema.sql"
+    engine: postgres
+    postgraphile_frontend:
+      enabled: false
+
+network: base-mainnet

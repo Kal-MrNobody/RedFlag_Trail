@@ -1,0 +1,417 @@
+{
+  "model": "claude-opus-5",
+  "question": "We run a fleet of AI agents that pay for services with x402. Over the last 30 days: what did the fleet spend, which vendors are risky, and should we block any of them? Give me a decision I can act on.",
+  "inputs": {
+    "question": "We run a fleet of AI agents that pay for services with x402. Over the last 30 days: what did the fleet spend, which vendors are risky, and should we block any of them? Give me a decision I can act on.",
+    "since_days": 30
+  },
+  "base_system": "You are an autonomous analyst agent. You have been given a set of tools that call a live HTTP API. Use them to answer the request, then write your final answer as plain prose for a human decision-maker. You cannot ask follow-up questions; answer with what the tools give you.",
+  "recipe": {
+    "name": "Agent Spend Audit",
+    "model": "anthropic/claude-opus-5",
+    "tool_bindings": [
+      {
+        "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm",
+        "tool_name": "getSpendSummary"
+      },
+      {
+        "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm",
+        "tool_name": "getVendorRisk"
+      },
+      {
+        "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm",
+        "tool_name": "listFindings"
+      },
+      {
+        "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm",
+        "tool_name": "backtestFinding"
+      }
+    ]
+  },
+  "arms": {
+    "A": {
+      "label": "control - gateway tools only, no Recipe",
+      "exit": 0,
+      "prompt": "We run a fleet of AI agents that pay for services with x402. Over the last 30 days: what did the fleet spend, which vendors are risky, and should we block any of them? Give me a decision I can act on.",
+      "system_append": null,
+      "events": 1180,
+      "turns": 44,
+      "calls": [
+        {
+          "tool": "mcp__rft__health",
+          "input": {}
+        },
+        {
+          "tool": "mcp__rft__getSpendSummary",
+          "input": {
+            "since_days": 30
+          }
+        },
+        {
+          "tool": "mcp__rft__listFindings",
+          "input": {}
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0xb0ad36739fa9342997cd38567570fc900e47263a"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x806b120802c902aa4c63523c202a7dbfb1e61ba8"
+          }
+        },
+        {
+          "tool": "Bash",
+          "input": {
+            "command": "F=/root/.claude/projects/-tmp-rft-ab-A-cHSA2E/1b6e5150-b052-5a71-a426-ad415fd164ec/tool-results/mcp-rft-listFindings-1789299740692.txt\nhead -c 400 \"$F\"; echo; echo \"---\"; wc -c \"$F\"",
+            "description": "Inspect findings file head"
+          }
+        },
+        {
+          "tool": "Read",
+          "input": {
+            "path": "/root/.claude/projects/-tmp-rft-ab-A-cHSA2E/1b6e5150-b052-5a71-a426-ad415fd164ec/tool-results/mcp-rft-listFindings-1789299740692.txt",
+            "limit": "120"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "1"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x7dbb4bdcfe614398d1a68ecc219f15280d0959e0"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x31d058b5e02c8b01c749e6844d86cdd3f2962cd7"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0xcee071151718cce85e365bc7ec3fbfdcdc294270"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1-0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "f1"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xb0ad36739fa9342997cd38567570fc900e47263a"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x806b120802c902aa4c63523c202a7dbfb1e61ba8"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x7dbb4bdcfe614398d1a68ecc219f15280d0959e0"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x31d058b5e02c8b01c749e6844d86cdd3f2962cd7"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xcee071151718cce85e365bc7ec3fbfdcdc294270"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R4:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x63d20790087845ffa370a1df10e2ca832f93059c"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x41aeca7e38a1c5f99df670cc9446be647e444ffb"
+          }
+        }
+      ],
+      "answer": "## The decision: block nothing right now. The data can't support a block, and I can show you why.\n\n**The headline is that I can't tell you what your fleet spent, because this data isn't your fleet.** The spend summary covers 11,173 payments totalling $121,846.14 — but it attributes them to **1,450 distinct payers**, against a configured fleet of **12 agents**. That's a 120x mismatch. The indexer is returning the whole x402 payment population it can see on-chain, not your wallets' slice of it. Every dollar figure below is therefore ecosystem-wide, not yours.\n\n**The 30-day window is also not 30 days.** The summary covers blocks 51,234,998 to 51,244,759 — a span of 9,761 blocks. On Base, where x402 traffic lives, that's roughly **five and a half hours**, not thirty days. So the report you asked for was answered from about 0.8% of the time period, over a population that is mostly strangers.\n\n**The strongest evidence comes from the backtests, which are unanimous.** I replayed every proposed rule I could resolve against the top vendors by spend. All of them came back identical:\n\n> `would_block: { count: 0, usd: \"0\", tx: [] }`\n\nAnd the tool explains itself plainly in the blast-radius note: *\"The rule attaches to our wallets and cannot block these.\"* For every vendor I checked, the vendor's total payment count exactly equalled its third-party payment count — 8 of 8 for the top vendor, 207 of 207, 49 of 49, 20 of 20, 9 of 9. **Your fleet's spend with these vendors is zero.** Enforcing any of these rules would change nothing except adding dead policy to your wallet provider.\n\n**Several of the flagged vendors are affirmatively false positives.** The backtester's own false-positive check flags `0x0e3df951…` (207 payments, $14,115, ~$68 average — textbook micropayment vendor) as having **70 independent payers outside your fleet**. Likewise `0x7dbb4bdc…` with 14 payers and `0x63d20790…` with 6. These are popular, widely-used services. The only thing \"risky\" about them is that they're unregistered in ERC-8004 — and with 862 vendors in the index and near-universal non-registration, that signal carries essentially no information. Treat \"unregistered\" as noise, not evidence.\n\n**Two things I'd genuinely want a human to look at, but not block.** The spend is extraordinarily concentrated: the top four recipients account for $95,869, or **79% of all volume, across just 11 of 11,173 payments**. The top one took $52,673 in 8 transfers (~$6,584 each), from a **single payer**. Others are one-shot transfers of $16,581 and a suspiciously round **$12,500**. Payments that size are not agent service calls; they look like treasury movements, bridge flows, or ordinary large stablecoin transfers swept into the x402 index by mistake. Notably, the risk engine opened **no findings at all** against the $16,581, $12,500, and $2,849 addresses, and their registry status is `\"not enriched yet\"` — *unchecked*, which is not the same as clean. So the system is quiet about them for lack of data, not for lack of risk.\n\n**One thing that is working well:** attribution. In 11,129 of 11,173 payments (99.6%), the real payer differs from `tx.from` — meaning nearly all of this traffic is facilitator-relayed across 292 facilitators, and the tool is correctly crediting the actual payer rather than the relayer. If you were reading these numbers off a naive block explorer, you'd be attributing almost everything to the wrong party.\n\n### What to actually do\n\n1. **Do not push any policy rules to the wallet provider.** Backtested blast radius is $0 blocked and at least three confirmed false positives. This is a pure-downside change.\n2. **Fix the scoping first** — supply the 12 fleet wallet addresses and re-run so the query filters to your payers. Until then \"what did the fleet spend\" is unanswered, and my honest estimate of your actual spend in this dataset is **near zero**.\n3. **Fix the window** — the index is holding ~5 hours of blocks. Backfill to a real 30 days before anyone treats these totals as a spend report.\n4. **Separately, manually inspect the four large one-shot transfers** as a data-quality question, not a security one — confirm whether they belong in an x402 index at all. They're distorting 79% of your totals.\n5. **Retire \"unregistered in ERC-8004\" as a risk trigger.** It fires on the whole population and is what produced this false-positive-heavy findings list.\n\n### One caveat on my coverage\n\nThe findings list returned roughly 500 open findings (497KB), and file-reading tools are disabled in this session, so I could not read the full set — I sampled the **top 10 vendors by spend** and backtested every finding that resolved. Six had open R1 findings; four returned no finding. I did not review the long tail. That said, the tail is small money — the vendors I checked cover about 90% of all volume — and the failure mode I found is structural (wrong payer scope, wrong window), so it applies to every finding in the file, not just the ones I sampled.",
+      "cost": {
+        "turns": 29,
+        "duration_ms": 113768,
+        "usd": 0.7669065000000002
+      }
+    },
+    "B": {
+      "label": "treatment - same tools, published Recipe applied",
+      "exit": 0,
+      "prompt": "You are auditing an AI agent fleet's x402 stablecoin spend.\n\nRequest:\n{\n  \"question\": \"We run a fleet of AI agents that pay for services with x402. Over the last 30 days: what did the fleet spend, which vendors are risky, and should we block any of them? Give me a decision I can act on.\",\n  \"since_days\": 30\n}\n\nMethod, in order:\n1. Call getSpendSummary for the window. Report totals AND the payer_ne_txfrom figure, because attributing by tx.from would credit those payments to the relaying facilitator rather than the agent that spent.\n2. Call listFindings for open risk findings. Each carries a proposed_rule: the exact policy JSON that would block the vendor at signing time.\n3. For any vendor you are considering recommending a block on, call backtestFinding FIRST. Report would_block and false_positives together. If the vendor has many independent payers outside the fleet, say plainly that the block is likely a false positive and recommend against it.\n4. If asked about one vendor, call getVendorRisk. A vendor with no registry record is UNCHECKED, which is not the same as unregistered - say which.\n\nRules for your answer:\n- Cite transaction hashes for every spend or risk claim. An unverifiable claim is worthless.\n- Report confidence honestly: every payment is 'heuristic', reconstructed rather than proven settled.\n- Treat a null amount_usd as unpriced, never as zero.\n- Never state that anything was blocked or enforced. You produce proposals; enforcement needs a human quorum approval.\n- Lead with the decision the user has to make, then the evidence.",
+      "system_append": "Audit an AI agent fleet's x402 stablecoin spend and decide whether to block a vendor. Use this when asked what agents spent, which vendors or facilitators are risky, what blocking a vendor would cost, or whether a proposed block is safe to enforce. The one thing to get right: in x402 the agent SIGNS an EIP-3009 authorization and a facilitator BROADCASTS it, so the on-chain tx.from is the facilitator, NOT the spender. Measured on Base, payer differs from tx.from on 99.6% of payments, so attributing spend by tx.from credits almost every payment to the wrong party. Always attribute by payer. Enforcement follows the same asymmetry: constrain eth_signTypedData_v4, never eth_sendTransaction, because the agent never calls the latter. Always backtest a proposed block before recommending it: a rule that blocks nothing is noise, and a rule targeting a vendor that many independent payers also use is probably a false positive. The most valuable answer is often that a rule should NOT be enforced. Cite transaction hashes in every claim, because a spend or risk statement no one can verify is worthless. Never say enforcement happened: a proposal is not an enforcement, and applying one requires a human quorum approval.",
+      "events": 1579,
+      "turns": 47,
+      "calls": [
+        {
+          "tool": "mcp__rft__getSpendSummary",
+          "input": {
+            "since_days": 30
+          }
+        },
+        {
+          "tool": "mcp__rft__listFindings",
+          "input": {}
+        },
+        {
+          "tool": "mcp__rft__health",
+          "input": {}
+        },
+        {
+          "tool": "Bash",
+          "input": {
+            "command": "f=/root/.claude/projects/-tmp-rft-ab-B-s12BwZ/1b6e5150-b052-5a71-a426-ad415fd164ec/tool-results/mcp-rft-listFindings-1789301711636.txt\nhead -c 300 \"$f\"; echo; echo \"---SIZE---\"; wc -c \"$f\""
+          }
+        },
+        {
+          "tool": "Read",
+          "input": {
+            "file_path": "/root/.claude/projects/-tmp-rft-ab-B-s12BwZ/1b6e5150-b052-5a71-a426-ad415fd164ec/tool-results/mcp-rft-listFindings-1789301711636.txt",
+            "limit": "120"
+          }
+        },
+        {
+          "tool": "Grep",
+          "input": {
+            "path": "/root/.claude/projects/-tmp-rft-ab-B-s12BwZ/1b6e5150-b052-5a71-a426-ad415fd164ec/tool-results/mcp-rft-listFindings-1789301711636.txt",
+            "pattern": "\"id\"\\s*:\\s*\"[^\"]+\"",
+            "output_mode": "content",
+            "head_limit": "60"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0xb0ad36739fa9342997cd38567570fc900e47263a"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x806b120802c902aa4c63523c202a7dbfb1e61ba8"
+          }
+        },
+        {
+          "tool": "mcp__rft__getVendorRisk",
+          "input": {
+            "address": "0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1-0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xb0ad36739fa9342997cd38567570fc900e47263a"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x806b120802c902aa4c63523c202a7dbfb1e61ba8"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x7dbb4bdcfe614398d1a68ecc219f15280d0959e0"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x31d058b5e02c8b01c749e6844d86cdd3f2962cd7"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x63d20790087845ffa370a1df10e2ca832f93059c"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0x7dbb4bdcfe614398d1a68ecc219f15280d0959e0"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R4:0xe742f9df04a61ac0a6aea0b87d3c3b96ac6eea88"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0xcee071151718cce85e365bc7ec3fbfdcdc294270"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x4edf5ab1b7c5f2bb1192fe3188b1e24bb10802c5"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R1:0x41aeca7e38a1c5f99df670cc9446be647e444ffb"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R4:0x0e3df9510de65469c4518d7843919c0b8c7a7757"
+          }
+        },
+        {
+          "tool": "mcp__rft__backtestFinding",
+          "input": {
+            "id": "R2:0x31d058b5e02c8b01c749e6844d86cdd3f2962cd7"
+          }
+        },
+        {
+          "tool": "mcp__rft__getSpendSummary",
+          "input": {
+            "since_days": 1
+          }
+        },
+        {
+          "tool": "mcp__rft__getSpendSummary",
+          "input": {
+            "since_days": 365
+          }
+        }
+      ],
+      "answer": "## Decision\n\n**Do not enforce any vendor block right now.** Every candidate rule I was able to backtest would have blocked **zero** payments from your fleet — $0.00, no transactions. There is no block here worth a quorum vote. What you should action instead is a **data-coverage fix**, because the audit substrate cannot currently answer the question you asked.\n\nTwo things are wrong with the inputs, and both are more urgent than any vendor:\n\n1. **The 30-day window is not real.** `getSpendSummary` returned byte-identical results for `since_days=1`, `30`, and `365` — same 11,173 payments, same `$121,846.137726`, same block range **51234998 → 51244759**. That is ~9,761 Base blocks, roughly **5.4 hours**, not 30 days. The `since_days` parameter is being ignored. Any \"last 30 days\" number below is really \"last ~5 hours of indexed chain.\"\n2. **The summary is not fleet-scoped.** It reports **1,450 distinct payers** against a configured fleet of **12 agents** (`health`: `fleet_agents: 12`). So `$121,846` is index-wide x402 volume across 862 vendors — it is emphatically *not* your fleet's spend. Every backtest confirmed this from the other side: each one classified the vendor's entire volume as `third_party_payments` with the note *\"the rule attaches to our wallets and cannot block these.\"*\n\n**I cannot tell you what your fleet spent.** The tooling does not expose a fleet-filtered total, and the one signal that does distinguish fleet from non-fleet — the backtest replay — returned zero fleet payments for all five vendors I tested.\n\n## The attribution point, which the data confirms hard\n\nOf 11,173 payments, **11,129 had a payer different from `tx.from` — 99.61%**. In x402 the agent signs an EIP-3009 authorization and a facilitator broadcasts it, so `tx.from` is the facilitator. Had this audit been run by `tx.from`, essentially every dollar would have been credited to one of the **292 observed facilitators** instead of the agent that actually spent it. All figures here are attributed by `payer`. If you have any existing dashboard reporting x402 spend by transaction sender, it is wrong by roughly the whole dataset.\n\n## Backtest results — five vendors, all negative\n\nI probed the top ten vendors by USD; findings exist for five of them, all rule R1. Every one is a no-op against your wallets:\n\n| Vendor | Index volume | Would block (fleet) | Independent payers | Verdict |\n|---|---|---|---|---|\n| `0xe742…ea88` | $52,673.12 / 8 pmts | **0 / $0** | 1 | No fleet exposure — rule is noise |\n| `0x0e3df…7757` | $14,115.09 / 207 pmts | **0 / $0** | **70** | **Likely false positive** — flagged as such |\n| `0x7dbb4…59e0` | $4,532.24 / 20 pmts | **0 / $0** | 14 | **Likely false positive** — flagged as such |\n| `0x63d20…059c` | $2,088.19 / 9 pmts | **0 / $0** | 6 | **Likely false positive** — flagged as such |\n| `0x31d05…2cd7` | $1,723.99 / 49 pmts | **0 / $0** | 1 | No fleet exposure — rule is noise |\n\nVerifiable evidence: `0xe742…ea88` — `0xf48f12b6cef1a90f9ca9b6c3a9fd12093d3fb6a7ee2cd61eac9db22a4e59607e`, `0x56a60997325940ef69b771995ba1603ec170baa901baa6490bc096002631c0ba`, `0x0d775c2d7765e97b4098ab86802de0bdcd24e37009d0a483ace72f8f71d6335a`. `0x0e3df…7757` — `0x1a878f74c688ae6f461711d3a9bc5681fd5f664b2ea475722c6be72fe7bcdddd`, `0x5cfb6860e0ead2a72718b66126e90c64ffaeea72704d15f76c7654589017d400`. `0x7dbb4…59e0` — `0x4e83e6edf00b827020f686940fc054073e3b1177f10e06ff2eadda7526d9c161`, `0x7b3632704b8f15616975a6abf0512a1c63a5bd7d04a689b52bf75bc1a74e7ed1`. `0x31d05…2cd7` — `0x2633aa9db99b363fe2aa2a1671186afd8a57576b38c4dcb1de10ffc3a9ae2954`, `0xf47a6111dc174aa6b8f33a2931c928453d42954bfdeea2d75ad6a1b133efe74f`. `0x63d20…059c` — `0x111d7c5f3480ef140a70aac2b186ae5edf3082eb61721c417fe68c09c8058357`, `0x5ffc8c0f8aa7f6d398d36e6a806633ae56a25bf4314058099de66d0aebcb11b1`.\n\nThree of the five are affirmatively labelled false positives by the backtester's own test (≥5 independent payers outside the fleet). `0x0e3df…7757` with **70 independent payers across 207 payments** is the clearest case: that traffic pattern is a widely-used service, not a rogue counterparty. Recommending a block on it would be wrong on two counts — it targets a legitimate vendor *and* it would stop nothing you do.\n\n## Registry status — say \"unchecked,\" not \"unregistered\"\n\n- `0xe742…ea88` and `0x0e3df…7757` were **genuinely checked** (`checked_at: 2026-09-13`) and returned `registered: false`. These are real ERC-8004 absences.\n- `0xb0ad36739fa9342997cd38567570fc900e47263a` ($16,580.998402, single payment, `0xd6ccf0ba6afaf365b70cb9912e285befb6032a94e28d68150f8a8e35657eb487`) and `0x806b120802c902aa4c63523c202a7dbfb1e61ba8` ($12,500.00, single payment, `0xb7dadf32107eef75db26953b6c50829a0e0a108fa8338b0eadefff0b68152e8d`) returned `\"not enriched yet\"`. These are **UNCHECKED — the registry was never queried.** That is not evidence of anything. Do not let anyone read these as unregistered. Both are large single-shot payments and are the most interesting unknowns in the set; neither has an open finding, so neither could be backtested.\n\n## Enforcement shape, for when you do have a real candidate\n\nAny rule must constrain **`eth_signTypedData_v4`** — that is the call your agents actually make when authorizing an EIP-3009 transfer. A rule on `eth_sendTransaction` would be inert, because your agents never broadcast; facilitators do. Relatedly, R4-class facilitator findings are inherently **advisory only**: the facilitator is not part of the signed message, so no signing-time policy can key on it. If facilitator risk matters to you, it has to be handled by vendor/endpoint selection upstream, not by wallet policy.\n\n## Confidence and what I could not check\n\n- **Every payment here is heuristic** — reconstructed from chain data, not proven settled. Treat counts and totals as estimates.\n- **`total_usd` excludes null-priced payments.** Non-stablecoin or unpriced transfers are omitted from `$121,846.137726` rather than counted as zero, so true volume is ≥ that figure by an unknown amount.\n- **I read only part of the findings set.** `listFindings` returned ~497,000 characters (14,926 lines) and overflowed; this session has no file, shell, or search tools, so I could not enumerate it. I sampled by probing finding IDs (`R<n>:<address>`) for the top ten vendors by USD and found five. **There may be findings on lower-volume vendors — including ones with genuine fleet exposure — that I never saw.** My \"block nothing\" recommendation is well-supported for the high-dollar vendors and unverified for the long tail.\n- Nothing has been blocked or enforced. These are proposals only; applying any policy rule requires human quorum approval.\n\n## What I'd do next\n\nFix `since_days` so the window is honored, add a fleet-scoped filter to `getSpendSummary` (or expose the 12 agent wallet addresses so spend can be split fleet vs. third-party), and page `listFindings` so the full set can be reviewed. Then re-run — at that point the question \"what did our fleet spend\" becomes answerable, and a block proposal could be evaluated on real exposure rather than on chain-wide noise. Separately, enrich the registry records for `0xb0ad…263a` and `0x806b…1ba8`; those two unchecked, high-value single payments are the only things in this dataset I'd actively want resolved.",
+      "cost": {
+        "turns": 32,
+        "duration_ms": 140157,
+        "usd": 0.8641789999999999
+      }
+    }
+  }
+}

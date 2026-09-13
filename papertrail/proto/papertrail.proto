@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package redflag.papertrail.v1;
+
+// A payer-attributed x402 payment ledger.
+//
+// The distinction this schema exists to preserve: in x402 the agent SIGNS an
+// EIP-3009 authorization and a facilitator BROADCASTS it, so the on-chain
+// tx.from is the facilitator, not the spender. Measured on Base, payer differs
+// from tx.from on 99.6% of payments. Both are carried so the attribution is
+// auditable rather than asserted.
+message Payments {
+  repeated Payment payments = 1;
+}
+
+message Payment {
+  // tx_hash:log_block_index - block_index is the receipt log index, which is
+  // verifiable on a block explorer. Do NOT use the Firehose `ordinal`.
+  string payment_id = 1;
+  uint64 block_num = 2;
+  int64 timestamp = 3;
+  string tx_hash = 4;
+  uint32 log_block_index = 5;
+
+  string asset = 10;
+  // The REAL spender, decoded from the authorization.
+  string payer = 11;
+  string recipient = 12;
+  // The relayer. Equals tx_from in practice.
+  string facilitator = 13;
+  // Kept deliberately: makes the misattribution this project prevents auditable.
+  string tx_from = 14;
+
+  // uint256, as emitted.
+  string amount_raw = 20;
+  uint32 decimals = 21;
+  // amount_raw / 10^decimals. ALWAYS set once decimals are known.
+  string amount_decimal = 22;
+  // Set ONLY when the asset is a recognised USD stablecoin; empty otherwise.
+  // Decimals alone do not make a value USD - that needs a price feed.
+  string amount_usd = 23;
+
+  string transfer_method = 30;
+  string settlement_source = 31;
+  string scheme = 32;
+  // Upstream is "heuristic" for every row observed. Carried through rather than
+  // dropped, so we never imply settlement certainty we cannot prove.
+  string confidence = 33;
+
+  // false on ~99.6% of Base payments. The headline metric.
+  bool payer_is_tx_from = 34;
+  // OUR computed allowlist. Pinax explicitly applies no facilitator filtering.
+  bool facilitator_known = 35;
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Agent Spend Audit",
+  "description": "Audit an AI agent fleet's x402 stablecoin spend and decide whether to block a vendor. Use this when asked what agents spent, which vendors or facilitators are risky, what blocking a vendor would cost, or whether a proposed block is safe to enforce. The one thing to get right: in x402 the agent SIGNS an EIP-3009 authorization and a facilitator BROADCASTS it, so the on-chain tx.from is the facilitator, NOT the spender. Measured on Base, payer differs from tx.from on 99.6% of payments, so attributing spend by tx.from credits almost every payment to the wrong party. Always attribute by payer. Enforcement follows the same asymmetry: constrain eth_signTypedData_v4, never eth_sendTransaction, because the agent never calls the latter. Always backtest a proposed block before recommending it: a rule that blocks nothing is noise, and a rule targeting a vendor that many independent payers also use is probably a false positive. The most valuable answer is often that a rule should NOT be enforced. Cite transaction hashes in every claim, because a spend or risk statement no one can verify is worthless. Never say enforcement happened: a proposal is not an enforcement, and applying one requires a human quorum approval.",
+  "input_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "question": {
+        "type": "string",
+        "description": "What to find out, e.g. 'what did we spend last month and who is risky' or 'should we block 0xabc...'"
+      },
+      "since_days": {
+        "type": "integer",
+        "description": "Look-back window in days. Defaults to 30.",
+        "default": 30
+      },
+      "vendor": {
+        "type": "string",
+        "description": "Optional vendor address to focus the audit on."
+      }
+    },
+    "required": ["question"]
+  },
+  "input_example": {
+    "question": "What did we spend last month and which vendors are risky?",
+    "since_days": 30
+  },
+  "output_example": {
+    "spend": {
+      "payments": 908,
+      "total_usd": "5065.56",
+      "payer_ne_txfrom": 905,
+      "attribution_note": "905 of 908 payments have payer != tx.from. Attributing by tx.from would credit them to the relaying facilitator."
+    },
+    "risky_vendors": [
+      {
+        "address": "0xcc1984e79726e7a0ae2b9df2ac9e79fb4983930e",
+        "rule": "R1",
+        "why": "Not present in the ERC-8004 registry.",
+        "evidence_tx": ["0x0b291976699594c3e72cb6675f2e9cbf41c3cf1f80bf394b236c35005e3b9e28"],
+        "backtest": {
+          "would_block": 0,
+          "false_positives": 1,
+          "recommendation": "Do NOT enforce. 302 independent payers use this vendor, so a block is likely a false positive."
+        }
+      }
+    ],
+    "caveats": [
+      "Every payment is confidence 'heuristic': these are reconstructed from AuthorizationUsed + Transfer + calldata, not proven settlements.",
+      "amount_usd is null for assets that are not USD stablecoins; decimals alone are not a price.",
+      "Nothing was enforced. Enforcement requires a human quorum approval."
+    ]
+  },
+  "prompt_template": "You are auditing an AI agent fleet's x402 stablecoin spend.\n\nRequest:\n{{inputs}}\n\nMethod, in order:\n1. Call getSpendSummary for the window. Report totals AND the payer_ne_txfrom figure, because attributing by tx.from would credit those payments to the relaying facilitator rather than the agent that spent.\n2. Call listFindings for open risk findings. Each carries a proposed_rule: the exact policy JSON that would block the vendor at signing time.\n3. For any vendor you are considering recommending a block on, call backtestFinding FIRST. Report would_block and false_positives together. If the vendor has many independent payers outside the fleet, say plainly that the block is likely a false positive and recommend against it.\n4. If asked about one vendor, call getVendorRisk. A vendor with no registry record is UNCHECKED, which is not the same as unregistered - say which.\n\nRules for your answer:\n- Cite transaction hashes for every spend or risk claim. An unverifiable claim is worthless.\n- Report confidence honestly: every payment is 'heuristic', reconstructed rather than proven settled.\n- Treat a null amount_usd as unpriced, never as zero.\n- Never state that anything was blocked or enforced. You produce proposals; enforcement needs a human quorum approval.\n- Lead with the decision the user has to make, then the evidence.",
+  "model": "anthropic/claude-opus-5",
+  "tool_bindings": [
+    { "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm", "tool_name": "getSpendSummary" },
+    { "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm", "tool_name": "getVendorRisk" },
+    { "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm", "tool_name": "listFindings" },
+    { "gateway_slug": "ulbnrohdjrg6dlid3hgvv6ptzm", "tool_name": "backtestFinding" }
+  ]
+}
